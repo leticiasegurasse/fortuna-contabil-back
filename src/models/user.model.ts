@@ -53,6 +53,7 @@ export default (sequelize: Sequelize) => {
                     isEmail: true,
                 },
             },
+
         },
         {
             sequelize,

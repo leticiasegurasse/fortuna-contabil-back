@@ -1,0 +1,844 @@
+{
+	"info": {
+		"_postman_id": "fortuna-contabil-blog-api",
+		"name": "Fortuna Contábil - Blog API",
+		"description": "Coleção completa para testar a API do blog da Fortuna Contábil",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🏥 Sistema",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "Verificar se a API está funcionando"
+					},
+					"response": []
+				},
+				{
+					"name": "Root",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Endpoint raiz da API"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints do sistema"
+		},
+		{
+			"name": "🔐 Autenticação",
+			"item": [
+				{
+					"name": "Registrar Usuário",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"novo_usuario\",\n  \"password\": \"senha123\",\n  \"email\": \"usuario@exemplo.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registrar novo usuário no sistema"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Fazer login no sistema"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.environment.set('authToken', response.data.token);",
+									"        console.log('Token salvo:', response.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Fazer logout do sistema"
+					},
+					"response": []
+				},
+				{
+					"name": "Renovar Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Renovar token de autenticação"
+					},
+					"response": []
+				},
+				{
+					"name": "Esqueci a Senha",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@fortunacontabil.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/forgot-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Solicitar redefinição de senha"
+					},
+					"response": []
+				},
+				{
+					"name": "Redefinir Senha",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"token_de_redefinicao\",\n  \"password\": \"nova_senha123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Redefinir senha com token"
+					},
+					"response": []
+				},
+				{
+					"name": "Verificar Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/verify-token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-token"
+							]
+						},
+						"description": "Verificar se o token é válido"
+					},
+					"response": []
+				},
+				{
+					"name": "Perfil do Usuário",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Obter perfil do usuário autenticado"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Perfil",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"novo_username\",\n  \"email\": \"novo_email@exemplo.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Atualizar perfil do usuário"
+					},
+					"response": []
+				},
+				{
+					"name": "Alterar Senha",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"senha_atual\",\n  \"newPassword\": \"nova_senha123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/change-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"change-password"
+							]
+						},
+						"description": "Alterar senha do usuário"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticação"
+		},
+		{
+			"name": "📝 Categorias",
+			"item": [
+				{
+					"name": "Listar Categorias",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Buscar por nome ou descrição",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Listar todas as categorias"
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Categoria por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"1"
+							]
+						},
+						"description": "Buscar categoria por ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Posts da Categoria",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/1/posts?page=1&limit=10&status=published",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"1",
+								"posts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "published",
+									"description": "Filtrar por status (published, draft, archived, all)"
+								}
+							]
+						},
+						"description": "Listar posts de uma categoria específica"
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Categoria",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Nova Categoria\",\n  \"description\": \"Descrição da nova categoria\",\n  \"color\": \"#3B82F6\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories"
+							]
+						},
+						"description": "Criar nova categoria (requer autenticação)"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Categoria",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Categoria Atualizada\",\n  \"description\": \"Nova descrição da categoria\",\n  \"color\": \"#10B981\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"1"
+							]
+						},
+						"description": "Atualizar categoria (requer autenticação)"
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Categoria",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/categories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"categories",
+								"1"
+							]
+						},
+						"description": "Excluir categoria (requer autenticação)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gerenciar categorias"
+		},
+		{
+			"name": "📄 Posts",
+			"item": [
+				{
+					"name": "Listar Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/posts?page=1&limit=10&status=published&sortBy=createdAt&sortOrder=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "published",
+									"description": "Filtrar por status (published, draft, archived, all)"
+								},
+								{
+									"key": "categoryId",
+									"value": "",
+									"description": "Filtrar por categoria",
+									"disabled": true
+								},
+								{
+									"key": "featured",
+									"value": "",
+									"description": "Filtrar por destaque (true/false)",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Buscar por título, resumo ou conteúdo",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Ordenar por (createdAt, publishedAt, views, title)"
+								},
+								{
+									"key": "sortOrder",
+									"value": "DESC",
+									"description": "Ordem (ASC, DESC)"
+								}
+							]
+						},
+						"description": "Listar todos os posts"
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Post por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/posts/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts",
+								"1"
+							]
+						},
+						"description": "Buscar post por ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Post por Slug",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/posts/slug/exemplo-post",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts",
+								"slug",
+								"exemplo-post"
+							]
+						},
+						"description": "Buscar post por slug"
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Título do Post\",\n  \"excerpt\": \"Resumo do post\",\n  \"content\": \"Conteúdo completo do post...\",\n  \"status\": \"draft\",\n  \"featured\": false,\n  \"categoryId\": 1,\n  \"metaTitle\": \"Meta título para SEO\",\n  \"metaDescription\": \"Meta descrição para SEO\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/posts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts"
+							]
+						},
+						"description": "Criar novo post (requer autenticação)"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Título Atualizado\",\n  \"excerpt\": \"Resumo atualizado\",\n  \"content\": \"Conteúdo atualizado...\",\n  \"status\": \"published\",\n  \"featured\": true,\n  \"categoryId\": 1,\n  \"metaTitle\": \"Meta título atualizado\",\n  \"metaDescription\": \"Meta descrição atualizada\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/posts/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts",
+								"1"
+							]
+						},
+						"description": "Atualizar post (requer autenticação)"
+					},
+					"response": []
+				},
+				{
+					"name": "Excluir Post",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/posts/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts",
+								"1"
+							]
+						},
+						"description": "Excluir post (requer autenticação)"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Status do Post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"published\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/posts/1/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts",
+								"1",
+								"status"
+							]
+						},
+						"description": "Atualizar status do post (requer autenticação)"
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Destaque do Post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"featured\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/posts/1/featured",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts",
+								"1",
+								"featured"
+							]
+						},
+						"description": "Atualizar destaque do post (requer autenticação)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gerenciar posts"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

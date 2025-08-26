@@ -2,10 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
-import UserFactory from '../models/user.model';
-import sequelize from '../config/db';
-
-const User = UserFactory(sequelize);
+import { User } from '../config/db';
 
 // Interface para dados de registro
 interface RegisterData {

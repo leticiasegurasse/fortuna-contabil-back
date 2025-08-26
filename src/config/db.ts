@@ -6,7 +6,7 @@ dotenv.config();
 // Configuração do banco de dados usando DB_URL ou parâmetros individuais
 const sequelize = new Sequelize(
     process.env.DB_URL || 
-    `postgres://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || 'password'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '5432'}/${process.env.DB_NAME || 'pesquisa_mercado'}`,
+    `postgres://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || 'password'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '5432'}/${process.env.DB_NAME || 'fortuna_contabil'}`,
     {
         dialect: 'postgres',
         logging: process.env.NODE_ENV === 'development' ? console.log : false,
@@ -18,7 +18,7 @@ const sequelize = new Sequelize(
         },
         define: {
             timestamps: true,
-            underscored: true,
+            underscored: false,
             freezeTableName: true
         }
     }
@@ -26,14 +26,29 @@ const sequelize = new Sequelize(
 
 // Importar e registrar modelos
 import UserFactory from '../models/user.model';
+import CategoryFactory from '../models/category.model';
+import PostFactory from '../models/post.model';
 
 const User = UserFactory(sequelize);
+const Category = CategoryFactory(sequelize);
+const Post = PostFactory(sequelize);
+
+// Definir associações
+Post.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
+Post.belongsTo(Category, { as: 'category', foreignKey: 'categoryId' });
 
 // Sincronizar modelos com o banco de dados
 const syncDatabase = async () => {
     try {
-        await sequelize.sync({ alter: true });
-        console.log('✅ Modelos sincronizados com o banco de dados');
+        // Usar force: true apenas se não houver dados (primeira execução)
+        const userCount = await User.count();
+        if (userCount === 0) {
+            await sequelize.sync({ force: true });
+            console.log('✅ Tabelas criadas do zero');
+        } else {
+            await sequelize.sync({ alter: true });
+            console.log('✅ Modelos sincronizados com o banco de dados');
+        }
     } catch (error) {
         console.error('❌ Erro ao sincronizar modelos:', error);
     }
@@ -44,5 +59,5 @@ if (process.env.NODE_ENV !== 'production') {
     syncDatabase();
 }
 
-export { sequelize, User };
+export { sequelize, User, Category, Post };
 export default sequelize;
