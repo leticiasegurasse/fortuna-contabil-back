@@ -3,12 +3,15 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 import sequelize from './config/db';
 import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
 import postRoutes from './routes/post.routes';
 import tagRoutes from './routes/tag.routes';
 import newsletterRoutes from './routes/newsletter.routes';
+import uploadRoutes from './routes/upload.routes';
 import { errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
 import seedDatabase from './scripts/seed';
 
@@ -18,10 +21,14 @@ const app = express();
 
 // Middlewares de segurança e parsing
 app.use(cors());
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Middleware para lidar com requisições OPTIONS (preflight) - temporariamente desabilitado
 
 // Rotas
 app.use('/api/auth', authRoutes);
@@ -29,6 +36,29 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/upload', uploadRoutes);
+
+// Rota para servir arquivos de upload
+app.get('/uploads/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const uploadDir = path.join(__dirname, '../uploads');
+  const filePath = path.join(uploadDir, filename);
+  
+  if (fs.existsSync(filePath)) {
+    // Configurar headers CORS para imagens
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache por 1 ano
+    
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({
+      success: false,
+      message: 'Arquivo não encontrado'
+    });
+  }
+});
 
 // Rota de teste
 app.get('/', (req, res) => {
@@ -109,6 +139,10 @@ app.listen(PORT, () => {
   console.log(`      GET  /api/newsletter/check/:email - Verificar status de inscrição`);
   console.log(`      GET  /api/newsletter/subscribers - Listar inscritos (protegido)`);
   console.log(`      GET  /api/newsletter/stats - Estatísticas da newsletter (protegido)`);
+  console.log(`   📸 Upload:`);
+  console.log(`      POST /api/upload/image - Upload de imagem (protegido)`);
+  console.log(`      GET  /uploads/:filename - Servir arquivo de imagem`);
+  console.log(`      DELETE /api/upload/image/:filename - Excluir imagem (protegido)`);
   console.log(`   🏥 Sistema:`);
   console.log(`      GET  /api/health - Health check`);
 });

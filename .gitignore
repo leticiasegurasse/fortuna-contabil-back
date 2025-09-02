@@ -34,3 +34,6 @@ yarn-error.log*
 
 # Arquivos de backup
 *.bak
+
+# Pasta de uploads de imagens
+uploads/

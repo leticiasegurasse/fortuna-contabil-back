@@ -7,7 +7,8 @@ import {
   updatePost,
   deletePost,
   updatePostStatus,
-  getPostsByTag
+  getPostsByTag,
+  incrementViews
 } from '../controllers/post.controller';
 import { authenticateToken } from '../middlewares/authMiddleware';
 import asyncMiddleware from '../middlewares/asyncMiddleware';
@@ -19,6 +20,7 @@ router.get('/', asyncMiddleware(getAllPosts));
 router.get('/tag/:tagId', asyncMiddleware(getPostsByTag));
 router.get('/slug/:slug', asyncMiddleware(getPostBySlug));
 router.get('/:id', asyncMiddleware(getPostById));
+router.patch('/:id/views', asyncMiddleware(incrementViews));
 
 // Rotas protegidas (requerem autenticação)
 router.post('/', authenticateToken, asyncMiddleware(createPost));

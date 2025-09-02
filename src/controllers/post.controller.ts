@@ -765,4 +765,40 @@ export const getPostsByTag = async (req: Request, res: Response) => {
   }
 };
 
+// PATCH /api/posts/:id/views - Incrementar visualizações
+export const incrementViews = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const post = await Post.findByPk(id);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post não encontrado'
+      });
+    }
+
+    // Incrementar visualizações
+    await post.increment('views');
+    
+    // Buscar o post atualizado para retornar o novo valor
+    const updatedPost = await Post.findByPk(id);
+    
+    res.json({
+      success: true,
+      message: 'Visualizações incrementadas com sucesso',
+      data: {
+        id: updatedPost?.id,
+        views: updatedPost?.views
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao incrementar visualizações:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+};
+
 
