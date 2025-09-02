@@ -30,12 +30,14 @@ import CategoryFactory from '../models/category.model';
 import PostFactory from '../models/post.model';
 import TagFactory from '../models/tag.model';
 import PostTagFactory from '../models/postTag.model';
+import NewsletterFactory from '../models/newsletter.model';
 
 const User = UserFactory(sequelize);
 const Category = CategoryFactory(sequelize);
 const Post = PostFactory(sequelize);
 const Tag = TagFactory(sequelize);
 const PostTag = PostTagFactory(sequelize);
+const Newsletter = NewsletterFactory(sequelize);
 
 // Definir associações
 Post.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
@@ -85,5 +87,5 @@ if (process.env.NODE_ENV !== 'production') {
     syncDatabase();
 }
 
-export { sequelize, User, Category, Post, Tag, PostTag };
+export { sequelize, User, Category, Post, Tag, PostTag, Newsletter };
 export default sequelize;

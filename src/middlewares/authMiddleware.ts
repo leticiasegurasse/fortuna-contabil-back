@@ -33,7 +33,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload;
         
         // Adicionar dados do usuário à requisição
         req.user = {
@@ -58,7 +58,7 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction): v
 
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload;
             req.user = {
                 userId: decoded.userId,
                 username: decoded.username

@@ -4,6 +4,32 @@ const migrateDatabase = async () => {
   try {
     console.log('🔄 Iniciando migração do banco de dados...');
 
+    // Criar tabela newsletter se não existir
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS newsletters (
+          id SERIAL PRIMARY KEY,
+          email VARCHAR(255) NOT NULL UNIQUE,
+          "isActive" BOOLEAN NOT NULL DEFAULT true,
+          "subscribedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+          "unsubscribedAt" TIMESTAMP WITH TIME ZONE,
+          "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        );
+      `);
+
+      // Criar índices se não existirem
+      await sequelize.query(`
+        CREATE INDEX IF NOT EXISTS idx_newsletters_email ON newsletters(email);
+        CREATE INDEX IF NOT EXISTS idx_newsletters_isActive ON newsletters("isActive");
+        CREATE INDEX IF NOT EXISTS idx_newsletters_subscribedAt ON newsletters("subscribedAt");
+      `);
+
+      console.log('✅ Tabela newsletter criada/verificada com sucesso');
+    } catch (error) {
+      console.log('⚠️ Aviso: Erro ao criar tabela newsletter (pode já existir):', error);
+    }
+
     // Verificar se o campo contentBlocks existe
     const [contentBlocksResults] = await sequelize.query(`
       SELECT column_name 

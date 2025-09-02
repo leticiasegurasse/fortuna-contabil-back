@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
 import postRoutes from './routes/post.routes';
 import tagRoutes from './routes/tag.routes';
+import newsletterRoutes from './routes/newsletter.routes';
 import { errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
 import seedDatabase from './scripts/seed';
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
@@ -101,6 +103,12 @@ app.listen(PORT, () => {
   console.log(`      DELETE /api/tags/:id - Excluir tag (protegido)`);
   console.log(`      POST /api/tags/:id/posts/:postId - Associar tag a post (protegido)`);
   console.log(`      DELETE /api/tags/:id/posts/:postId - Remover tag de post (protegido)`);
+  console.log(`   📧 Newsletter:`);
+  console.log(`      POST /api/newsletter/subscribe - Inscrever na newsletter`);
+  console.log(`      POST /api/newsletter/unsubscribe - Cancelar inscrição`);
+  console.log(`      GET  /api/newsletter/check/:email - Verificar status de inscrição`);
+  console.log(`      GET  /api/newsletter/subscribers - Listar inscritos (protegido)`);
+  console.log(`      GET  /api/newsletter/stats - Estatísticas da newsletter (protegido)`);
   console.log(`   🏥 Sistema:`);
   console.log(`      GET  /api/health - Health check`);
 });
