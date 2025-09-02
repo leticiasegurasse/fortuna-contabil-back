@@ -37,8 +37,18 @@ const generateUniqueSlug = async (name: string, excludeId?: number): Promise<str
 
 // Função para atualizar contador de posts
 const updatePostsCount = async (categoryId: number) => {
-  const count = await Post.count({ where: { categoryId } });
-  await Category.update({ postsCount: count }, { where: { id: categoryId } });
+  try {
+    const count = await Post.count({ where: { categoryId } });
+    
+    console.log(`Atualizando contador da categoria ${categoryId}: ${count} posts`);
+    
+    await Category.update({ postsCount: count }, { where: { id: categoryId } });
+    
+    console.log(`Contador da categoria ${categoryId} atualizado para ${count}`);
+  } catch (error) {
+    console.error(`Erro ao atualizar contador da categoria ${categoryId}:`, error);
+    throw error;
+  }
 };
 
 // GET /api/categories - Listar todas as categorias

@@ -37,8 +37,29 @@ const generateUniqueSlug = async (title: string, excludeId?: number): Promise<st
 
 // Função para atualizar contador de posts da categoria
 const updateCategoryPostsCount = async (categoryId: number) => {
-  const count = await Post.count({ where: { categoryId } });
-  await Category.update({ postsCount: count }, { where: { id: categoryId } });
+  try {
+    // Contar posts da categoria
+    const count = await Post.count({ 
+      where: { categoryId } 
+    });
+    
+    console.log(`Atualizando contador da categoria ${categoryId}: ${count} posts`);
+    
+    // Atualizar o contador na categoria
+    const [affectedRows] = await Category.update(
+      { postsCount: count }, 
+      { where: { id: categoryId } }
+    );
+    
+    if (affectedRows > 0) {
+      console.log(`Contador da categoria ${categoryId} atualizado para ${count}`);
+    } else {
+      console.warn(`Categoria ${categoryId} não encontrada para atualizar contador`);
+    }
+  } catch (error) {
+    console.error(`Erro ao atualizar contador da categoria ${categoryId}:`, error);
+    throw error;
+  }
 };
 
 // Função para atualizar contador de posts das tags
@@ -580,6 +601,8 @@ export const deletePost = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
+    console.log(`Iniciando exclusão do post ${id}`);
+
     // Buscar post com tags para atualizar contadores
     const post = await Post.findByPk(id, {
       include: [
@@ -600,20 +623,28 @@ export const deletePost = async (req: Request, res: Response) => {
 
     // Salvar categoria para atualizar contador
     const categoryId = post.categoryId;
+    console.log(`Post ${id} pertence à categoria ${categoryId}`);
     
     // Salvar IDs das tags para atualizar contadores
     const tagIds = (post as any).tags?.map((tag: any) => tag.id) || [];
+    console.log(`Post ${id} tem ${tagIds.length} tags:`, tagIds);
 
     // Excluir post (isso automaticamente excluirá os relacionamentos devido ao CASCADE)
+    console.log(`Excluindo post ${id}...`);
     await post.destroy();
+    console.log(`Post ${id} excluído com sucesso`);
 
     // Atualizar contador de posts da categoria
+    console.log(`Atualizando contador da categoria ${categoryId} após exclusão...`);
     await updateCategoryPostsCount(categoryId);
     
     // Atualizar contadores das tags
     if (tagIds.length > 0) {
+      console.log(`Atualizando contadores das tags após exclusão...`);
       await updateTagPostsCount(tagIds);
     }
+
+    console.log(`Exclusão do post ${id} concluída com sucesso`);
 
     res.json({
       success: true,
@@ -661,6 +692,9 @@ export const updatePostStatus = async (req: Request, res: Response) => {
 
     // Atualizar status
     await post.update({ status, publishedAt });
+
+    // Atualizar contador de posts da categoria (caso o status tenha mudado)
+    await updateCategoryPostsCount(post.categoryId);
 
     res.json({
       success: true,

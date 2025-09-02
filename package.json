@@ -37,6 +37,7 @@
     "@types/pg": "^8.11.14",
     "@types/stripe": "^8.0.417",
     "@types/uuid": "^9.0.8",
+    "axios": "^1.11.0",
     "nodemon": "^3.1.10",
     "sequelize-cli": "^6.6.3",
     "ts-node": "^10.9.2",
