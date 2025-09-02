@@ -28,14 +28,32 @@ const sequelize = new Sequelize(
 import UserFactory from '../models/user.model';
 import CategoryFactory from '../models/category.model';
 import PostFactory from '../models/post.model';
+import TagFactory from '../models/tag.model';
+import PostTagFactory from '../models/postTag.model';
 
 const User = UserFactory(sequelize);
 const Category = CategoryFactory(sequelize);
 const Post = PostFactory(sequelize);
+const Tag = TagFactory(sequelize);
+const PostTag = PostTagFactory(sequelize);
 
 // Definir associações
 Post.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
 Post.belongsTo(Category, { as: 'category', foreignKey: 'categoryId' });
+
+// Associações many-to-many entre Post e Tag
+Post.belongsToMany(Tag, { 
+    through: PostTag, 
+    as: 'tags', 
+    foreignKey: 'postId',
+    otherKey: 'tagId'
+});
+Tag.belongsToMany(Post, { 
+    through: PostTag, 
+    as: 'posts', 
+    foreignKey: 'tagId',
+    otherKey: 'postId'
+});
 
 // Sincronizar modelos com o banco de dados
 const syncDatabase = async () => {
@@ -59,5 +77,5 @@ if (process.env.NODE_ENV !== 'production') {
     syncDatabase();
 }
 
-export { sequelize, User, Category, Post };
+export { sequelize, User, Category, Post, Tag, PostTag };
 export default sequelize;

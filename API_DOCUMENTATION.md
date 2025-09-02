@@ -2,7 +2,7 @@
 
 ## 🚀 Visão Geral
 
-Esta API fornece endpoints para gerenciar o sistema de blog da Fortuna Contábil, incluindo categorias e posts.
+Esta API fornece endpoints para gerenciar o sistema de blog da Fortuna Contábil, incluindo categorias, posts e tags.
 
 ## 🔐 Autenticação
 
@@ -100,14 +100,172 @@ Buscar categoria por ID.
 }
 ```
 
-#### POST /api/categories (Protegido)
-Criar nova categoria.
+### 🏷️ Tags
+
+#### GET /api/tags
+Listar todas as tags.
+
+**Query Parameters:**
+- `search` (opcional): Buscar por nome ou descrição
+- `page` (opcional): Página (padrão: 1)
+- `limit` (opcional): Itens por página (padrão: 10)
+- `sort` (opcional): Ordenação ('postsCount', 'name', 'createdAt') - padrão: 'postsCount'
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "MEI",
+      "slug": "mei",
+      "description": "Microempreendedor Individual",
+      "color": "#3A6B52",
+      "postsCount": 8,
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 8,
+    "page": 1,
+    "limit": 10,
+    "pages": 1
+  }
+}
+```
+
+#### GET /api/tags/popular
+Listar tags populares (ordenadas por número de posts).
+
+**Query Parameters:**
+- `limit` (opcional): Número máximo de tags (padrão: 10)
+- `minPosts` (opcional): Número mínimo de posts para considerar popular (padrão: 1)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "MEI",
+      "slug": "mei",
+      "description": "Microempreendedor Individual",
+      "color": "#3A6B52",
+      "postsCount": 8,
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Abertura de Empresa",
+      "slug": "abertura-empresa",
+      "description": "Processo de abertura de empresas",
+      "color": "#C5A46D",
+      "postsCount": 6,
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### GET /api/tags/:id
+Buscar tag por ID.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "MEI",
+    "slug": "mei",
+    "description": "Microempreendedor Individual",
+    "color": "#3A6B52",
+    "postsCount": 8,
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
+  }
+}
+```
+
+#### GET /api/tags/slug/:slug
+Buscar tag por slug.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "MEI",
+    "slug": "mei",
+    "description": "Microempreendedor Individual",
+    "color": "#3A6B52",
+    "postsCount": 8,
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
+  }
+}
+```
+
+#### GET /api/tags/:id/posts
+Listar posts de uma tag específica.
+
+**Query Parameters:**
+- `page` (opcional): Página (padrão: 1)
+- `limit` (opcional): Itens por página (padrão: 10)
+- `status` (opcional): Status dos posts ('published', 'draft', 'archived', 'all') - padrão: 'published'
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "tag": {
+      "id": 1,
+      "name": "MEI",
+      "slug": "mei",
+      "description": "Microempreendedor Individual",
+      "color": "#3A6B52",
+      "postsCount": 8
+    },
+    "posts": [
+      {
+        "id": 1,
+        "title": "Como abrir um MEI em 2024",
+        "slug": "como-abrir-mei-2024",
+        "excerpt": "Guia completo para abertura de MEI...",
+        "status": "published",
+        "publishedAt": "2024-01-15T10:00:00.000Z",
+        "author": {
+          "id": 1,
+          "username": "admin",
+          "email": "admin@fortunacontabil.com"
+        }
+      }
+    ],
+    "pagination": {
+      "total": 8,
+      "page": 1,
+      "limit": 10,
+      "pages": 1
+    }
+  }
+}
+```
+
+#### POST /api/tags
+Criar nova tag (protegido).
 
 **Body:**
 ```json
 {
-  "name": "Nova Categoria",
-  "description": "Descrição da categoria",
+  "name": "Nova Tag",
+  "description": "Descrição da nova tag",
   "color": "#3B82F6"
 }
 ```
@@ -116,12 +274,12 @@ Criar nova categoria.
 ```json
 {
   "success": true,
-  "message": "Categoria criada com sucesso",
+  "message": "Tag criada com sucesso",
   "data": {
-    "id": 6,
-    "name": "Nova Categoria",
-    "slug": "nova-categoria",
-    "description": "Descrição da categoria",
+    "id": 9,
+    "name": "Nova Tag",
+    "slug": "nova-tag",
+    "description": "Descrição da nova tag",
     "color": "#3B82F6",
     "postsCount": 0,
     "createdAt": "2024-01-15T10:00:00.000Z",
@@ -130,36 +288,68 @@ Criar nova categoria.
 }
 ```
 
-#### PUT /api/categories/:id (Protegido)
-Atualizar categoria.
+#### PUT /api/tags/:id
+Atualizar tag (protegido).
 
 **Body:**
 ```json
 {
-  "name": "Categoria Atualizada",
+  "name": "Tag Atualizada",
   "description": "Nova descrição",
-  "color": "#10B981"
+  "color": "#EF4444"
 }
 ```
-
-#### DELETE /api/categories/:id (Protegido)
-Excluir categoria.
 
 **Response:**
 ```json
 {
   "success": true,
-  "message": "Categoria excluída com sucesso"
+  "message": "Tag atualizada com sucesso",
+  "data": {
+    "id": 1,
+    "name": "Tag Atualizada",
+    "slug": "tag-atualizada",
+    "description": "Nova descrição",
+    "color": "#EF4444",
+    "postsCount": 8,
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
+  }
 }
 ```
 
-#### GET /api/categories/:id/posts
-Listar posts de uma categoria.
+#### DELETE /api/tags/:id
+Excluir tag (protegido).
 
-**Query Parameters:**
-- `page` (opcional): Página (padrão: 1)
-- `limit` (opcional): Itens por página (padrão: 10)
-- `status` (opcional): Filtrar por status (padrão: 'published')
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Tag excluída com sucesso"
+}
+```
+
+#### POST /api/tags/:id/posts/:postId
+Associar tag a um post (protegido).
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Tag associada ao post com sucesso"
+}
+```
+
+#### DELETE /api/tags/:id/posts/:postId
+Remover associação de tag a um post (protegido).
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Associação removida com sucesso"
+}
+```
 
 ### 📄 Posts
 
@@ -170,7 +360,6 @@ Listar todos os posts.
 - `search` (opcional): Buscar por título, resumo ou conteúdo
 - `status` (opcional): Filtrar por status (draft, published, archived)
 - `categoryId` (opcional): Filtrar por categoria
-- `featured` (opcional): Filtrar por destaque (true/false)
 - `page` (opcional): Página (padrão: 1)
 - `limit` (opcional): Itens por página (padrão: 10)
 - `sortBy` (opcional): Ordenar por (createdAt, publishedAt, views, title)
@@ -188,12 +377,10 @@ Listar todos os posts.
       "excerpt": "Guia completo para abrir sua empresa...",
       "content": "Conteúdo completo do post...",
       "status": "published",
-      "featured": true,
+      "image": "https://exemplo.com/imagem-post.jpg",
       "views": 1247,
       "authorId": 1,
       "categoryId": 1,
-      "metaTitle": "Como abrir MEI - Guia Completo",
-      "metaDescription": "Aprenda como abrir sua empresa MEI...",
       "publishedAt": "2024-01-15T10:00:00.000Z",
       "createdAt": "2024-01-15T10:00:00.000Z",
       "updatedAt": "2024-01-15T10:00:00.000Z",
@@ -235,10 +422,8 @@ Criar novo post.
   "excerpt": "Resumo do post",
   "content": "Conteúdo completo do post...",
   "status": "draft",
-  "featured": false,
-  "categoryId": 1,
-  "metaTitle": "Meta título para SEO",
-  "metaDescription": "Meta descrição para SEO"
+  "image": "URL da imagem do post",
+  "categoryId": 1
 }
 ```
 
@@ -258,15 +443,7 @@ Atualizar status do post.
 }
 ```
 
-#### PUT /api/posts/:id/featured (Protegido)
-Atualizar destaque do post.
 
-**Body:**
-```json
-{
-  "featured": true
-}
-```
 
 ## 🗄️ Estrutura do Banco de Dados
 
@@ -287,12 +464,10 @@ Atualizar destaque do post.
 - `excerpt` (TEXT)
 - `content` (TEXT, NOT NULL)
 - `status` (ENUM: 'draft', 'published', 'archived', NOT NULL, DEFAULT: 'draft')
-- `featured` (BOOLEAN, NOT NULL, DEFAULT: false)
+- `image` (VARCHAR(500))
 - `views` (INTEGER, NOT NULL, DEFAULT: 0)
 - `authorId` (INTEGER, NOT NULL, FOREIGN KEY -> users.id)
 - `categoryId` (INTEGER, NOT NULL, FOREIGN KEY -> categories.id)
-- `metaTitle` (VARCHAR(60))
-- `metaDescription` (VARCHAR(160))
 - `publishedAt` (TIMESTAMP)
 - `createdAt` (TIMESTAMP)
 - `updatedAt` (TIMESTAMP)
@@ -310,18 +485,16 @@ Atualizar destaque do post.
 7. **Filtros e busca** avançados
 8. **Paginação** em todas as listagens
 9. **Ordenação** por múltiplos campos
-10. **SEO metadata** para posts
-11. **Status de posts** (rascunho, publicado, arquivado)
-12. **Sistema de destaque** para posts
-13. **Proteção de rotas** com middleware de autenticação
-14. **Seed automático** de dados iniciais
+10. **Status de posts** (rascunho, publicado, arquivado)
+11. **Proteção de rotas** com middleware de autenticação
+12. **Seed automático** de dados iniciais
 
 ### 🚀 Recursos Avançados
 
 - **Slugs únicos**: Geração automática de URLs amigáveis
 - **Contadores em tempo real**: Atualização automática do número de posts por categoria
 - **Busca inteligente**: Busca por título, resumo e conteúdo
-- **Filtros múltiplos**: Por status, categoria, destaque, etc.
+- **Filtros múltiplos**: Por status, categoria, etc.
 - **Ordenação flexível**: Por data, visualizações, título, etc.
 - **Paginação eficiente**: Controle de página e limite
 - **Relacionamentos**: Posts incluem dados do autor e categoria

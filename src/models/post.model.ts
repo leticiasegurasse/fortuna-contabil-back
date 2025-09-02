@@ -7,12 +7,10 @@ interface PostAttributes {
   excerpt: string;
   content: string;
   status: 'draft' | 'published' | 'archived';
-  featured: boolean;
+  image?: string;
   views: number;
   authorId: number;
   categoryId: number;
-  metaTitle?: string;
-  metaDescription?: string;
   publishedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -28,12 +26,10 @@ export default (sequelize: Sequelize) => {
     public excerpt!: string;
     public content!: string;
     public status!: 'draft' | 'published' | 'archived';
-    public featured!: boolean;
+    public image?: string;
     public views!: number;
     public authorId!: number;
     public categoryId!: number;
-    public metaTitle?: string;
-    public metaDescription?: string;
     public publishedAt?: Date;
 
     // Timestamps
@@ -81,10 +77,9 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: 'draft',
       },
-      featured: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
+      image: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
       views: {
         type: DataTypes.INTEGER,
@@ -110,20 +105,6 @@ export default (sequelize: Sequelize) => {
           key: 'id',
         },
       },
-      metaTitle: {
-        type: DataTypes.STRING(60),
-        allowNull: true,
-        validate: {
-          len: [0, 60],
-        },
-      },
-      metaDescription: {
-        type: DataTypes.STRING(160),
-        allowNull: true,
-        validate: {
-          len: [0, 160],
-        },
-      },
       publishedAt: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -140,9 +121,6 @@ export default (sequelize: Sequelize) => {
         },
         {
           fields: ['status'],
-        },
-        {
-          fields: ['featured'],
         },
         {
           fields: ['authorId'],

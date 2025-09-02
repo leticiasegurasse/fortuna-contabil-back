@@ -1,4 +1,4 @@
-import { Category, Post, User } from '../config/db';
+import { Category, Post, User, Tag, PostTag } from '../config/db';
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 
@@ -71,6 +71,74 @@ const seedDatabase = async () => {
       if (!existingCategory) {
         await Category.create(categoryData);
         console.log(`✅ Categoria "${categoryData.name}" criada`);
+      }
+    }
+
+    // Criar tags iniciais
+    const tags = [
+      {
+        name: 'MEI',
+        slug: 'mei',
+        description: 'Microempreendedor Individual',
+        color: '#3A6B52',
+        postsCount: 0
+      },
+      {
+        name: 'Abertura de Empresa',
+        slug: 'abertura-empresa',
+        description: 'Processo de abertura de empresas',
+        color: '#C5A46D',
+        postsCount: 0
+      },
+      {
+        name: 'Declaração Anual',
+        slug: 'declaracao-anual',
+        description: 'Declarações anuais obrigatórias',
+        color: '#10B981',
+        postsCount: 0
+      },
+      {
+        name: 'Imposto de Renda',
+        slug: 'imposto-renda',
+        description: 'Declaração de IR',
+        color: '#EF4444',
+        postsCount: 0
+      },
+      {
+        name: 'Finanças',
+        slug: 'financas',
+        description: 'Gestão financeira empresarial',
+        color: '#8B5CF6',
+        postsCount: 0
+      },
+      {
+        name: 'Regularização',
+        slug: 'regularizacao',
+        description: 'Regularização de empresas',
+        color: '#F59E0B',
+        postsCount: 0
+      },
+      {
+        name: 'Consultoria',
+        slug: 'consultoria',
+        description: 'Serviços de consultoria',
+        color: '#06B6D4',
+        postsCount: 0
+      },
+      {
+        name: 'Dicas',
+        slug: 'dicas',
+        description: 'Dicas para empreendedores',
+        color: '#84CC16',
+        postsCount: 0
+      }
+    ];
+
+    for (const tagData of tags) {
+      const existingTag = await Tag.findOne({ where: { slug: tagData.slug } });
+      if (!existingTag) {
+        await Tag.create(tagData);
+        console.log(`✅ Tag "${tagData.name}" criada`);
       }
     }
 

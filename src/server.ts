@@ -7,6 +7,7 @@ import sequelize from './config/db';
 import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
 import postRoutes from './routes/post.routes';
+import tagRoutes from './routes/tag.routes';
 import { errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
 import seedDatabase from './scripts/seed';
 
@@ -18,12 +19,14 @@ const app = express();
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/tags', tagRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
@@ -87,7 +90,17 @@ app.listen(PORT, () => {
   console.log(`      PUT  /api/posts/:id - Atualizar post (protegido)`);
   console.log(`      DELETE /api/posts/:id - Excluir post (protegido)`);
   console.log(`      PUT  /api/posts/:id/status - Atualizar status (protegido)`);
-  console.log(`      PUT  /api/posts/:id/featured - Atualizar destaque (protegido)`);
+  console.log(`   🏷️ Blog - Tags:`);
+  console.log(`      GET  /api/tags - Listar todas as tags`);
+  console.log(`      GET  /api/tags/popular - Listar tags populares`);
+  console.log(`      GET  /api/tags/:id - Buscar tag por ID`);
+  console.log(`      GET  /api/tags/slug/:slug - Buscar tag por slug`);
+  console.log(`      GET  /api/tags/:id/posts - Posts de uma tag`);
+  console.log(`      POST /api/tags - Criar tag (protegido)`);
+  console.log(`      PUT  /api/tags/:id - Atualizar tag (protegido)`);
+  console.log(`      DELETE /api/tags/:id - Excluir tag (protegido)`);
+  console.log(`      POST /api/tags/:id/posts/:postId - Associar tag a post (protegido)`);
+  console.log(`      DELETE /api/tags/:id/posts/:postId - Remover tag de post (protegido)`);
   console.log(`   🏥 Sistema:`);
   console.log(`      GET  /api/health - Health check`);
 });

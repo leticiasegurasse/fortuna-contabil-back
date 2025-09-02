@@ -229,10 +229,8 @@ export const createPost = async (req: Request, res: Response) => {
       excerpt,
       content,
       status = 'draft',
-      featured = false,
-      categoryId,
-      metaTitle,
-      metaDescription
+      image,
+      categoryId
     } = req.body;
 
     // Validações
@@ -279,11 +277,9 @@ export const createPost = async (req: Request, res: Response) => {
       excerpt: excerpt?.trim() || '',
       content: content.trim(),
       status,
-      featured,
+      image: image?.trim() || null,
       authorId: (req as any).user.userId, // ID do usuário autenticado
       categoryId,
-      metaTitle: metaTitle?.trim() || '',
-      metaDescription: metaDescription?.trim() || '',
       publishedAt
     });
 
@@ -329,10 +325,8 @@ export const updatePost = async (req: Request, res: Response) => {
       excerpt,
       content,
       status,
-      featured,
-      categoryId,
-      metaTitle,
-      metaDescription
+      image,
+      categoryId
     } = req.body;
 
     // Buscar post
@@ -399,10 +393,8 @@ export const updatePost = async (req: Request, res: Response) => {
       excerpt: excerpt?.trim() || '',
       content: content.trim(),
       status,
-      featured,
+      image: image?.trim() || null,
       categoryId,
-      metaTitle: metaTitle?.trim() || '',
-      metaDescription: metaDescription?.trim() || '',
       publishedAt
     });
 
@@ -526,34 +518,4 @@ export const updatePostStatus = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /api/posts/:id/featured - Atualizar destaque do post
-export const updatePostFeatured = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { featured } = req.body;
 
-    // Buscar post
-    const post = await Post.findByPk(id);
-    if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post não encontrado'
-      });
-    }
-
-    // Atualizar destaque
-    await post.update({ featured });
-
-    res.json({
-      success: true,
-      message: 'Destaque do post atualizado com sucesso',
-      data: { featured }
-    });
-  } catch (error) {
-    console.error('Erro ao atualizar destaque do post:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
-  }
-};
