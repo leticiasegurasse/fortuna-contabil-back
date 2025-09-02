@@ -6,7 +6,8 @@ import {
   createPost,
   updatePost,
   deletePost,
-  updatePostStatus
+  updatePostStatus,
+  getPostsByTag
 } from '../controllers/post.controller';
 import { authenticateToken } from '../middlewares/authMiddleware';
 import asyncMiddleware from '../middlewares/asyncMiddleware';
@@ -15,6 +16,7 @@ const router = Router();
 
 // Rotas públicas
 router.get('/', asyncMiddleware(getAllPosts));
+router.get('/tag/:tagId', asyncMiddleware(getPostsByTag));
 router.get('/slug/:slug', asyncMiddleware(getPostBySlug));
 router.get('/:id', asyncMiddleware(getPostById));
 

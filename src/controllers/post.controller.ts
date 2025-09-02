@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Post, Category, User } from '../config/db';
+import { Post, Category, User, Tag, PostTag } from '../config/db';
 import { Op } from 'sequelize';
 
 // Função para gerar slug a partir do título
@@ -39,6 +39,31 @@ const generateUniqueSlug = async (title: string, excludeId?: number): Promise<st
 const updateCategoryPostsCount = async (categoryId: number) => {
   const count = await Post.count({ where: { categoryId } });
   await Category.update({ postsCount: count }, { where: { id: categoryId } });
+};
+
+// Função para atualizar contador de posts das tags
+const updateTagPostsCount = async (tagIds: number[]) => {
+  for (const tagId of tagIds) {
+    const count = await PostTag.count({ where: { tagId } });
+    await Tag.update({ postsCount: count }, { where: { id: tagId } });
+  }
+};
+
+// Função para processar tags de um post
+const processPostTags = async (postId: number, tagIds: number[]) => {
+  // Remover relacionamentos existentes
+  await PostTag.destroy({ where: { postId } });
+  
+  // Adicionar novos relacionamentos
+  if (tagIds && tagIds.length > 0) {
+    const postTags = tagIds.map(tagId => ({ postId, tagId }));
+    await PostTag.bulkCreate(postTags);
+  }
+  
+  // Atualizar contadores das tags
+  if (tagIds && tagIds.length > 0) {
+    await updateTagPostsCount(tagIds);
+  }
 };
 
 // Função para validar e processar blocos de conteúdo
@@ -156,6 +181,12 @@ export const getAllPosts = async (req: Request, res: Response) => {
           model: Category,
           as: 'category',
           attributes: ['id', 'name', 'slug', 'color']
+        },
+        {
+          model: Tag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug', 'color'],
+          through: { attributes: [] }
         }
       ],
       order: orderClause,
@@ -198,6 +229,12 @@ export const getPostById = async (req: Request, res: Response) => {
           model: Category,
           as: 'category',
           attributes: ['id', 'name', 'slug', 'color']
+        },
+        {
+          model: Tag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug', 'color'],
+          through: { attributes: [] }
         }
       ]
     });
@@ -244,6 +281,12 @@ export const getPostBySlug = async (req: Request, res: Response) => {
           model: Category,
           as: 'category',
           attributes: ['id', 'name', 'slug', 'color']
+        },
+        {
+          model: Tag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug', 'color'],
+          through: { attributes: [] }
         }
       ]
     });
@@ -282,7 +325,8 @@ export const createPost = async (req: Request, res: Response) => {
       contentBlocks,
       status = 'draft',
       image,
-      categoryId
+      categoryId,
+      tagIds
     } = req.body;
 
     // Validações
@@ -349,6 +393,11 @@ export const createPost = async (req: Request, res: Response) => {
     // Atualizar contador de posts da categoria
     await updateCategoryPostsCount(categoryId);
 
+    // Processar tags do post
+    if (tagIds && tagIds.length > 0) {
+      await processPostTags(post.id, tagIds);
+    }
+
     // Buscar post com relacionamentos
     const createdPost = await Post.findByPk(post.id, {
       include: [
@@ -361,6 +410,12 @@ export const createPost = async (req: Request, res: Response) => {
           model: Category,
           as: 'category',
           attributes: ['id', 'name', 'slug', 'color']
+        },
+        {
+          model: Tag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug', 'color'],
+          through: { attributes: [] }
         }
       ]
     });
@@ -389,7 +444,8 @@ export const updatePost = async (req: Request, res: Response) => {
       contentBlocks,
       status,
       image,
-      categoryId
+      categoryId,
+      tagIds
     } = req.body;
 
     // Buscar post
@@ -478,6 +534,11 @@ export const updatePost = async (req: Request, res: Response) => {
       await updateCategoryPostsCount(categoryId);
     }
 
+    // Processar tags do post
+    if (tagIds && tagIds.length > 0) {
+      await processPostTags(post.id, tagIds);
+    }
+
     // Buscar post atualizado com relacionamentos
     const updatedPost = await Post.findByPk(id, {
       include: [
@@ -490,6 +551,12 @@ export const updatePost = async (req: Request, res: Response) => {
           model: Category,
           as: 'category',
           attributes: ['id', 'name', 'slug', 'color']
+        },
+        {
+          model: Tag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug', 'color'],
+          through: { attributes: [] }
         }
       ]
     });
@@ -513,8 +580,17 @@ export const deletePost = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Buscar post
-    const post = await Post.findByPk(id);
+    // Buscar post com tags para atualizar contadores
+    const post = await Post.findByPk(id, {
+      include: [
+        {
+          model: Tag,
+          as: 'tags',
+          attributes: ['id']
+        }
+      ]
+    });
+    
     if (!post) {
       return res.status(404).json({
         success: false,
@@ -524,12 +600,20 @@ export const deletePost = async (req: Request, res: Response) => {
 
     // Salvar categoria para atualizar contador
     const categoryId = post.categoryId;
+    
+    // Salvar IDs das tags para atualizar contadores
+    const tagIds = (post as any).tags?.map((tag: any) => tag.id) || [];
 
-    // Excluir post
+    // Excluir post (isso automaticamente excluirá os relacionamentos devido ao CASCADE)
     await post.destroy();
 
     // Atualizar contador de posts da categoria
     await updateCategoryPostsCount(categoryId);
+    
+    // Atualizar contadores das tags
+    if (tagIds.length > 0) {
+      await updateTagPostsCount(tagIds);
+    }
 
     res.json({
       success: true,
@@ -585,6 +669,95 @@ export const updatePostStatus = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Erro ao atualizar status do post:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+};
+
+// GET /api/posts/tag/:tagId - Buscar posts por tag
+export const getPostsByTag = async (req: Request, res: Response) => {
+  try {
+    const { tagId } = req.params;
+    const { 
+      page = 1, 
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC'
+    } = req.query;
+    
+    const offset = (Number(page) - 1) * Number(limit);
+
+    // Verificar se a tag existe
+    const tag = await Tag.findByPk(tagId);
+    if (!tag) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tag não encontrada'
+      });
+    }
+
+    // Ordenação
+    const orderClause: any = [];
+    if (sortBy === 'publishedAt') {
+      orderClause.push(['publishedAt', sortOrder]);
+    } else if (sortBy === 'views') {
+      orderClause.push(['views', sortOrder]);
+    } else if (sortBy === 'title') {
+      orderClause.push(['title', sortOrder]);
+    } else {
+      orderClause.push(['createdAt', sortOrder]);
+    }
+
+    // Buscar posts que têm a tag especificada
+    const { count, rows: posts } = await Post.findAndCountAll({
+      include: [
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username', 'email']
+        },
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name', 'slug', 'color']
+        },
+        {
+          model: Tag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug', 'color'],
+          through: { attributes: [] },
+          where: { id: tagId }
+        }
+      ],
+      where: { status: 'published' }, // Apenas posts publicados
+      order: orderClause,
+      limit: Number(limit),
+      offset,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        tag: {
+          id: tag.id,
+          name: tag.name,
+          slug: tag.slug,
+          color: tag.color,
+          description: tag.description
+        },
+        posts
+      },
+      pagination: {
+        total: count,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(count / Number(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao buscar posts por tag:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'
