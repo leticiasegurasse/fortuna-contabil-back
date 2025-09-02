@@ -41,6 +41,58 @@ const updateCategoryPostsCount = async (categoryId: number) => {
   await Category.update({ postsCount: count }, { where: { id: categoryId } });
 };
 
+// Função para validar e processar blocos de conteúdo
+const validateAndProcessContentBlocks = (contentBlocks: any[]): any[] => {
+  if (!Array.isArray(contentBlocks)) {
+    throw new Error('Content blocks deve ser um array');
+  }
+
+  // Ordenar blocos por ordem
+  const sortedBlocks = contentBlocks.sort((a, b) => a.order - b.order);
+
+  // Validar cada bloco
+  for (let i = 0; i < sortedBlocks.length; i++) {
+    const block = sortedBlocks[i];
+    
+    if (!block.type || !block.content || typeof block.order !== 'number') {
+      throw new Error(`Bloco ${i + 1}: deve ter type, content e order`);
+    }
+
+    if (!['title', 'paragraph', 'image', 'subtitle', 'list', 'quote'].includes(block.type)) {
+      throw new Error(`Bloco ${i + 1}: tipo inválido '${block.type}'`);
+    }
+
+    // Gerar ID único se não existir
+    if (!block.id) {
+      block.id = `block_${Date.now()}_${i}`;
+    }
+
+    // Validar metadados específicos por tipo
+    switch (block.type) {
+      case 'title':
+      case 'subtitle':
+        if (block.metadata?.level && (block.metadata.level < 1 || block.metadata.level > 6)) {
+          throw new Error(`Bloco ${i + 1}: nível de título deve ser entre 1 e 6`);
+        }
+        break;
+      case 'image':
+        if (!block.metadata?.imageAlt) {
+          block.metadata = { ...block.metadata, imageAlt: 'Imagem do post' };
+        }
+        break;
+      case 'list':
+        if (block.metadata?.listType && !['ordered', 'unordered'].includes(block.metadata.listType)) {
+          throw new Error(`Bloco ${i + 1}: tipo de lista deve ser 'ordered' ou 'unordered'`);
+        }
+        break;
+    }
+  }
+
+  return sortedBlocks;
+};
+
+
+
 // GET /api/posts - Listar todos os posts
 export const getAllPosts = async (req: Request, res: Response) => {
   try {
@@ -227,7 +279,7 @@ export const createPost = async (req: Request, res: Response) => {
     const {
       title,
       excerpt,
-      content,
+      contentBlocks,
       status = 'draft',
       image,
       categoryId
@@ -241,10 +293,10 @@ export const createPost = async (req: Request, res: Response) => {
       });
     }
 
-    if (!content || !content.trim()) {
+    if (!contentBlocks || !Array.isArray(contentBlocks) || contentBlocks.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Conteúdo do post é obrigatório'
+        message: 'Blocos de conteúdo são obrigatórios'
       });
     }
 
@@ -270,12 +322,23 @@ export const createPost = async (req: Request, res: Response) => {
     // Definir data de publicação se o status for 'published'
     const publishedAt = status === 'published' ? new Date() : undefined;
 
+    // Processar blocos de conteúdo
+    let processedContentBlocks: any[] = [];
+    try {
+      processedContentBlocks = validateAndProcessContentBlocks(contentBlocks);
+    } catch (error: any) {
+      return res.status(400).json({
+        success: false,
+        message: `Erro nos blocos de conteúdo: ${error.message}`
+      });
+    }
+
     // Criar post
     const post = await Post.create({
       title: title.trim(),
       slug,
       excerpt: excerpt?.trim() || '',
-      content: content.trim(),
+      contentBlocks: processedContentBlocks,
       status,
       image: image?.trim() || null,
       authorId: (req as any).user.userId, // ID do usuário autenticado
@@ -323,7 +386,7 @@ export const updatePost = async (req: Request, res: Response) => {
     const {
       title,
       excerpt,
-      content,
+      contentBlocks,
       status,
       image,
       categoryId
@@ -346,10 +409,10 @@ export const updatePost = async (req: Request, res: Response) => {
       });
     }
 
-    if (!content || !content.trim()) {
+    if (!contentBlocks || !Array.isArray(contentBlocks) || contentBlocks.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Conteúdo do post é obrigatório'
+        message: 'Blocos de conteúdo são obrigatórios'
       });
     }
 
@@ -366,6 +429,17 @@ export const updatePost = async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         message: 'Categoria não encontrada'
+      });
+    }
+
+    // Processar blocos de conteúdo
+    let processedContentBlocks: any[] = [];
+    try {
+      processedContentBlocks = validateAndProcessContentBlocks(contentBlocks);
+    } catch (error: any) {
+      return res.status(400).json({
+        success: false,
+        message: `Erro nos blocos de conteúdo: ${error.message}`
       });
     }
 
@@ -391,7 +465,7 @@ export const updatePost = async (req: Request, res: Response) => {
       title: title.trim(),
       slug,
       excerpt: excerpt?.trim() || '',
-      content: content.trim(),
+      contentBlocks: processedContentBlocks,
       status,
       image: image?.trim() || null,
       categoryId,
@@ -425,7 +499,7 @@ export const updatePost = async (req: Request, res: Response) => {
       message: 'Post atualizado com sucesso',
       data: updatedPost
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao atualizar post:', error);
     res.status(500).json({
       success: false,

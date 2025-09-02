@@ -67,6 +67,14 @@ const syncDatabase = async () => {
             await sequelize.sync({ alter: true });
             console.log('✅ Modelos sincronizados com o banco de dados');
         }
+
+        // Executar migração para adicionar campos novos
+        try {
+            const { default: migrateDatabase } = await import('../scripts/migrate');
+            await migrateDatabase();
+        } catch (migrationError) {
+            console.warn('⚠️ Aviso: Erro na migração (pode ser normal na primeira execução):', migrationError);
+        }
     } catch (error) {
         console.error('❌ Erro ao sincronizar modelos:', error);
     }

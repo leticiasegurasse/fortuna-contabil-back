@@ -1,13 +1,30 @@
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 
+// Interface para blocos de conteúdo
+interface ContentBlock {
+  id: string;
+  type: 'title' | 'paragraph' | 'image' | 'subtitle' | 'list' | 'quote';
+  content: string;
+  order: number;
+  metadata?: {
+    level?: number; // Para títulos (h1, h2, h3, etc.)
+    alignment?: 'left' | 'center' | 'right';
+    imageAlt?: string; // Para imagens
+    imageCaption?: string; // Para imagens
+    listType?: 'ordered' | 'unordered'; // Para listas
+    quoteAuthor?: string; // Para citações
+    [key: string]: any; // Para outros metadados
+  };
+}
+
 interface PostAttributes {
   id: number;
   title: string;
   slug: string;
   excerpt: string;
-  content: string;
+  contentBlocks: ContentBlock[]; // Novo campo para conteúdo estruturado
   status: 'draft' | 'published' | 'archived';
-  image?: string;
+  image?: string; // Imagem principal do post
   views: number;
   authorId: number;
   categoryId: number;
@@ -16,7 +33,7 @@ interface PostAttributes {
   updatedAt?: Date;
 }
 
-interface PostCreationAttributes extends Optional<PostAttributes, 'id' | 'views' | 'publishedAt' | 'createdAt' | 'updatedAt'> {}
+interface PostCreationAttributes extends Optional<PostAttributes, 'id' | 'views' | 'publishedAt' | 'createdAt' | 'updatedAt' | 'contentBlocks'> {}
 
 export default (sequelize: Sequelize) => {
   class Post extends Model<PostAttributes, PostCreationAttributes> implements PostAttributes {
@@ -24,7 +41,7 @@ export default (sequelize: Sequelize) => {
     public title!: string;
     public slug!: string;
     public excerpt!: string;
-    public content!: string;
+    public contentBlocks!: ContentBlock[];
     public status!: 'draft' | 'published' | 'archived';
     public image?: string;
     public views!: number;
@@ -65,12 +82,28 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      content: {
-        type: DataTypes.TEXT,
-        allowNull: false,
+      contentBlocks: {
+        type: DataTypes.JSONB, // Usar JSONB para melhor performance
+        allowNull: false, // Agora é obrigatório
+        defaultValue: [],
         validate: {
-          notEmpty: true,
-        },
+          isValidContentBlocks(value: any) {
+            if (!Array.isArray(value)) {
+              throw new Error('Content blocks deve ser um array');
+            }
+            if (value.length === 0) {
+              throw new Error('Content blocks não pode estar vazio');
+            }
+            for (const block of value) {
+              if (!block.type || !block.content || typeof block.order !== 'number') {
+                throw new Error('Cada bloco deve ter type, content e order');
+              }
+              if (!['title', 'paragraph', 'image', 'subtitle', 'list', 'quote'].includes(block.type)) {
+                throw new Error('Tipo de bloco inválido');
+              }
+            }
+          }
+        }
       },
       status: {
         type: DataTypes.ENUM('draft', 'published', 'archived'),
@@ -130,6 +163,10 @@ export default (sequelize: Sequelize) => {
         },
         {
           fields: ['publishedAt'],
+        },
+        {
+          fields: ['contentBlocks'],
+          using: 'gin', // Índice GIN para JSONB
         },
       ],
     }
